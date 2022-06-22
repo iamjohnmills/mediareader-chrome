@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=0.8, maximum-scale=0.8">
+  <title>MediaReader for Chrome</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;500&display=swap" rel="stylesheet">
+  <script type="text/javascript" src="MediaReader.js"></script>
+  <script type="text/javascript" src="store.js"></script>
+  <script type="text/javascript" src="app.js"></script>
+
+  <style>
+  * { box-sizing: border-box; font-family: 'Roboto Mono', sans-serif; -webkit-font-smoothing: subpixel-antialiased; }
+  html, body{ margin: 0; min-height: 100%; overflow-x: hidden; }
+
+  /* .navicon { width: 30px; height: 30px; fill: #999; position: absolute; top: 50%; margin-top: -15px; left: 15px; cursor: pointer; }
+  .feed-form { position: relative; border-radius: 40px; border: 10px solid #7e23e2; padding: 15px 55px 15px 55px; margin-bottom: 30px; }
+  .container { width: 530px; max-width: 100%; margin: 0 auto; padding: 0px 15px; position: relative; }
+  #content { padding-top: 15px; }
+  .feed-source-input { position: relative; z-index: 2; text-align: center; width: 100%; border: 0; outline: none; font-size: 16px;  }
+  @media only screen and (min-width: 600px) {
+    .feed-form { margin-left: -15px; margin-right: -15px; }
+  }
+  .item-container { margin-bottom: 60px; }
+  .loading { padding: 0 20px; text-align: center; font-size: 18px; }
+  .loading a { color: #7e23e2; margin-left: 5px; font-weight: normal; text-decoration: underline; }
+
+  h2 { margin: 0 0 10px 0; font-size: 24px; }
+  h2 a { color: #000000; text-decoration: none; }
+  h2 a:hover { text-decoration: underline; }
+  .item-images { display: none; padding-top: 10px; margin-bottom: 20px; }
+  .item-images.on { display: block; }
+  .resizeable { resize: vertical; overflow: auto; }
+  .item-image { border: 1px solid #000000; background: #000;  margin-bottom: 10px; }
+  .item-twitter { border: 0; background: transparent; }
+  .item-image iframe { position: relative; z-index: 0; }
+  .item-image canvas, .item-image img, .item-image video, .item-image iframe { display: block; width: 100%; border: 0; }
+  .item-image-caption { font-size: 11px; background: #000000; padding: 3px; color: #ffffff; overflow-x: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item-container button { white-space: nowrap; background: #fff; color: #7e23e2; font-weight: 500; font-size: 18px; padding: 0; outline: none; border: none; cursor: pointer; text-align: left; }
+  .feed-menu-items { display: none; margin-bottom: 30px; padding: 0; }
+  .feed-menu-items-list { margin-bottom: 20px; padding: 0px; }
+  .feed-menu-items-list li { padding: 4px; border-bottom: 1px solid #ccc;}
+  .feed-menu.on .feed-menu-items { display: block; padding: 0 5px; }
+  .feed-menu-item { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; font-size: 13px; cursor: pointer;}
+  .feed-menu-item.active { font-weight: bold; }
+
+  .item-embed .resize { background: #ccff00; color: #fff; }
+
+
+
+  .text-shadow { text-shadow: 1px 1px 1px rgba(0,0,0,0.2)}
+  .cool-gradient { color: #fff; background: linear-gradient(-90deg, rgba(121,63,251,1) 0%, rgba(252,70,107,1) 100%); }
+
+  .intro { text-align: center; }
+
+  .btn-purple { color: #fff; background: #7e23e2;  } */
+
+  /* header { position: relative; padding: 20px; z-index: 1; background: #fff; text-align: center; top: 0; left: 0; right: 0; width: 100%;}
+  header .menu-container { height: 35px; margin: 0 auto;  }
+  header .menu { height: 100%; align-items: center; margin: 0 -5px; display: flex; justify-content: center; }
+    .menu > div { flex-grow: 0; border: 1px solid rgba(0,0,0,0.3); border-radius: 4px; padding: 6px; margin: 0 5px;  display: flex; align-items: center; height: 100%; }
+    .feed-input { position: relative; width: 500px; background: #fff !important; }
+    .feed-input input[type=text] { line-height: 0; font-size: 13px; outline: 0; border: 0; width: 100%; padding: 2px 5px 2px 8px; }
+    .feed-input input[type=text]::placeholder { color: rgba(0,0,0,0.5) }
+    .feed-input button { cursor: pointer; line-height: 0; background: #fff; border: 0; border-radius: 2px; padding: 2px 4px; margin: 0 2px; height: 100%; display: flex; align-items: center;} */
+
+
+  /* Utility Classes */
+  .flex-center { display: flex; align-items: center; justify-content: center; }
+
+  /* Main Container */
+  main { width: 534px; max-width: 100%; margin: 0 auto; padding: 0 15px; }
+
+  /* Logo */
+  #logo { text-align: center; padding: 20px 20px 0 20px; line-height: 1; font-size: 16px;  }
+    #logo i { font-style: normal; display: inline-flex; color: #fff; background: #7e23e2; border-radius: 4px; font-size: 14px; width: 35px; font-weight: bold; height: 25px; }
+    @media only screen and (min-width: 900px) {
+      #logo { position: fixed; top: 0; left: 0; }
+    }
+  /* Menu */
+  nav { align-items: stretch; margin: 20px 0; border: 1px solid rgba(0,0,0,0.3); border-radius: 4px; padding: 6px; }
+    nav > * { margin: 0 2px; }
+    nav input { flex-grow: 1; padding: 0 6px; border: 0; outline: none; }
+
+  menu { display: none; margin: 0 0 20px 0; padding: 0 10px; }
+    menu.active { display: block; }
+    menuitem { display: flex; align-items: center; justify-content: space-between; padding: 2px 0; }
+    menuitem > span { flex-grow: 0; flex-shrink: 1; max-width: 440px; word-wrap: break-word; padding-right: 15px; }
+  menu.
+
+
+  #loading { display: none; margin: 0 8px; z-index: 4; box-sizing: border-box; width: 16px; height: 16px; border-radius: 50%; border-top: 2px solid rgba(0,0,0,0.4); border-right: 2px solid transparent; animation: spin .6s linear infinite; }
+  #loading.on { display: block; }
+  @keyframes spin { to {transform: rotate(360deg) } }
+
+
+  #content { margin-bottom: 20px; }
+    .feed-item { padding: 20px 0; }
+    .feed-item h2 { margin: 0 0 10px 0; font-size: 24px; }
+    .feed-item h2 a { color: #000000; text-decoration: none; }
+    .feed-item h2 a:hover { text-decoration: underline; }
+    .feed-item button.load-more { white-space: nowrap; background: #fff; color: #7e23e2; font-weight: 500; font-size: 18px; padding: 0; outline: none; border: none; cursor: pointer; text-align: left; }
+
+    .media-wrapper { position: relative;  }
+    .media { margin-bottom: 20px; position: relative; background: #000; clip-path: inset(0 0 0 0 round 20px); }
+    .media.embed figure > div { resize: vertical; overflow: auto; }
+    .media.embed iframe { position: relative; z-index: 0; }
+    figure { margin: 0; width: 100%; clip-path: inset(2px 2px 6px 2px round 18px); padding: 2px 2px 6px 2px; position: relative; z-index: 1; }
+    figure > *:not(figcaption), figure > * > * { width: 100%; border: 0; display: block; user-select: none;  }
+    figure iframe { height: 100%; }
+    figcaption { display: none; position: absolute; top: 0; left: 0; right: 0; font-size: 11px; background: #000; padding: 8px 20px; color: #ffffff; overflow-x: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    figure:hover figcaption { display: block; }
+    .resize { position: absolute; bottom: 0; align-items: flex-end; height: 100%; padding-bottom: 2px; right: -50px; z-index: 2; width: 50px; cursor: pointer; color: #000; }
+      .resize svg { width: 20px; height: 20px; }
+
+  </style>
+</head>
+<body>
+<main>
+
+  <!-- Logo -->
+  <div id="logo">
+    <i class="flex-center">MR</i> <strong>Media</strong>Reader
+  </div>
+
+  <!-- Menu -->
+  <nav id="nav" class="flex-center">
+    <button id="action-showfeeds" class="flex-center action">
+      <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+      </svg>
+    </button>
+    <input id="input-feedurl" type="text" autocomplete="off" placeholder="Add Feed URL..." />
+    <div id="loading"></div>
+    <button id="action-showmediafilters" class="flex-center action">
+      <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
+        <path d="M1.5 2A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13zm13 1a.5.5 0 0 1 .5.5v6l-3.775-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12v.54A.505.505 0 0 1 1 12.5v-9a.5.5 0 0 1 .5-.5h13z"/>
+      </svg>
+    </button>
+    <button id="action-showcontentfilters" class="flex-center action">
+      <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+        <path d="M3 5.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM3 8a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 8zm0 2.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5z"/>
+      </svg>
+    </button>
+  </nav>
+
+  <!-- Menu - Content Filters -->
+  <menu id="menu-contentfilters" class="action"></menu>
+
+  <!-- Menu - Media Filters -->
+  <menu id="menu-mediafilters" class="action"></menu>
+
+  <!-- Menu - Media Filters -->
+  <menu id="menu-feeds" class="action"></menu>
+
+  <!-- Loading -->
+
+  <!-- Content -->
+  <div id="content"></div>
+
+</main>
+
+</body>
+</html>

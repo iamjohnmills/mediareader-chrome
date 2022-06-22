@@ -377,16 +377,18 @@ class MediaReader {
       var xml = parser.parseFromString(string, 'text/xml');
       if(xml.querySelector('rss') == null && xml.querySelector('feed') == null) throw 'Not a valid feed';
       var item_nodes = xml.querySelectorAll('rss > channel > item, feed > entry');
-      return await Promise.all( Array.from(item_nodes).map(async (node) => {
+      const items = await Promise.all( Array.from(item_nodes).map(async (node) => {
         let media_objs_content = await this.getMediaInString(node.textContent);
-        let media_objs_node = await this.getMediaInString(node.innerHTML.replaceAll(/<!\[CDATA\[|\]\]>/gm,''));        
+        let media_objs_node = await this.getMediaInString(node.innerHTML.replaceAll(/<!\[CDATA\[|\]\]>/gm,''));
         return {
-          title: node.querySelector('title') ? node.querySelector('title').textContent : 'No Title',
+          title: node.querySelector('title') ? node.querySelector('title').textContent.replace(/<\/?[^>]+(>|$)/g, '') : 'No Title',
+          date: node.querySelector('pubDate,published') ? node.querySelector('pubDate,published').textContent.replace(/<\/?[^>]+(>|$)/g, '') : 'No Date',
           url: await this.getUrlFromFeedNode(node),
           media_objs: [...new Map(media_objs_content.concat(media_objs_node).map(item => [item.url, item])).values()],
           // media_objs: await this.getMediaInString(node.innerHTML.replaceAll(/<!\[CDATA\[|\]\]>/gm,''), media_content_objs),
         }
       }));
+      return items.sort((a, b) => new Date(b.date) - new Date(a.date));
     } catch(e) {
       console.log(e);
       throw e;

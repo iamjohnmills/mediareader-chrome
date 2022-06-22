@@ -7,13 +7,16 @@ var store = new Store();
         'https://www.popsci.com/feed/',
         'https://futurism.com/feed',
         'http://feeds2.feedburner.com/Swissmiss',
+        'https://www.youtube.com/feeds/videos.xml?channel_id=UCI4fHQkguBNW3SwTqmehzjw',
         'https://www.youtube.com/feeds/videos.xml?channel_id=UCi8e0iOVk1fEOogdfu4YgfA',
         'https://hnrss.org/show',
 
-        'https://www.reddit.com/r/interestingasfuck/top.rss',
-        'https://www.reddit.com/r/Damnthatsinteresting/top.rss',
-        'https://www.reddit.com/r/BeAmazed/top.rss',
+        'https://www.reddit.com/r/interestingasfuck.rss',
+        'https://www.reddit.com/r/Damnthatsinteresting.rss',
+        'https://www.reddit.com/r/BeAmazed.rss',
+        'https://www.reddit.com/r/interestingasfuck+Damnthatsinteresting+BeAmazed.rss',
 
+        'https://onmilwaukee.com/rss',
         'http://feeds.feedburner.com/thursdaynightpizza/zwyW',
         'https://goingawesomeplaces.com/feed/',
 
@@ -102,6 +105,22 @@ var store = new Store();
 
 let els;
 
+const _timeAgo = (date) => {
+  const seconds = Math.floor((new Date() - date) / 1000);
+  if(isNaN(seconds)) return false;
+  let interval = seconds / 31536000;
+  if (interval > 1) return `${Math.floor(interval)} year${Math.floor(interval) !== 1 ? 's' : ''} ago`;
+  interval = seconds / 2592000;
+  if (interval > 1) return `${Math.floor(interval)} month${Math.floor(interval) !== 1 ? 's' : ''} ago`;
+  interval = seconds / 86400;
+  if (interval > 1) return `${Math.floor(interval)} day${Math.floor(interval) !== 1 ? 's' : ''} ago`;
+  interval = seconds / 3600;
+  if (interval > 1) return `${Math.floor(interval)} hour${Math.floor(interval) !== 1 ? 's' : ''} ago`;
+  interval = seconds / 60;
+  if (interval > 1) return `${Math.floor(interval)} minute${Math.floor(interval) !== 1 ? 's' : ''} ago`;
+  return `Just now`
+}
+
 const createIframeResizePaddle = (root) => {
   const iframe = root.querySelector('iframe');
   if(!iframe) return;
@@ -111,8 +130,21 @@ const createIframeResizePaddle = (root) => {
   item_els.container.setAttribute('class','resize flex-center');
   item_els.container.setAttribute('draggable','false');
   item_els.container.innerHTML = `<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8zM7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708l2-2zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10z"/></svg>`;
-  item_els.container.addEventListener('click', (event) => { iframe.style.height = `${parseInt(iframe.style.height) + 100}px` } );
+  item_els.container.addEventListener('click', (event) => { iframe.style.height = `${parseInt(iframe.style.height) + 220}px` } );
   root.appendChild(item_els.container);
+}
+
+const createMediaFilterActions = (root) => {
+  const item_els = {
+    container: document.createElement('div'),
+    createfilter: document.createElement('button'),
+  }
+  item_els.createfilter.innerHTML = `<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.354 4.646L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 1 1 .708-.708z"/></svg>`;
+  item_els.container.setAttribute('class','media-actions flex-center');
+  item_els.createfilter.setAttribute('class','flex-center');
+  item_els.createfilter.addEventListener('click', (event) => {  } );
+  item_els.container.appendChild(item_els.createfilter);
+  root.querySelector('figcaption').appendChild(item_els.container);
 }
 
 const createMediaElements = (media_objs, url) => {
@@ -135,7 +167,7 @@ const createMediaElements = (media_objs, url) => {
     } else if(media_obj.type == 'embed'){
       item_els.figure.innerHTML = `<iframe style="height:${media_obj.height}px" src="${media_obj.url}" />`;
     }
-    item_els.caption.innerHTML = media_obj.url;
+    item_els.caption.innerHTML = `<span>${media_obj.url}</span>`;
     item_els.figure.appendChild(item_els.caption)
     item_els.container.appendChild(item_els.figure)
     item_els.wrapper.appendChild(item_els.container)
@@ -174,10 +206,15 @@ const handleParseSourceSuccess = async (media_objs, root, button, feed_media_obj
   } else {
     button.innerHTML = `Found ${unique.length} media source${unique.length !== 1 ? 's' : ''}.`;
     const els_media = await createMediaElements(unique, url);
-    els_media.forEach(el_media => {
-      createIframeResizePaddle(el_media);
-      root.appendChild(el_media);
-    });
+    for(el_media of els_media) {
+      await createMediaFilterActions(el_media)
+      await createIframeResizePaddle(el_media);
+      await root.appendChild(el_media);
+    }
+    // els_media.forEach(el_media => {
+    //   createIframeResizePaddle(el_media);
+    //   root.appendChild(el_media);
+    // });
   }
 }
 
@@ -219,14 +256,16 @@ const getFirstMediaObject = async (media_objs) => {
 
 const handleParseFeedSuccess = async (feed_item_objs,feed_url) => {
   els.content.innerHTML = ``;
-  feed_item_objs.forEach(async (item,i) => {
+  for(const [i,item] of feed_item_objs.entries()){
     const item_els = {
-      container: document.createElement('div'),
+      container: document.createElement('article'),
       title: document.createElement('h2'),
+      date: document.createElement('time'),
       media: document.createElement('div'),
       loadmore: document.createElement('button'),
     }
-    item_els.container.setAttribute('class', 'feed-item');
+    const time_ago = _timeAgo(new Date(item.date));
+    item_els.date.innerHTML = time_ago;
     item_els.media.setAttribute('class', 'medias');
     item_els.loadmore.setAttribute('class', 'load-more');
     item_els.loadmore.setAttribute('data-state', 'not-loaded');
@@ -235,18 +274,20 @@ const handleParseFeedSuccess = async (feed_item_objs,feed_url) => {
     let first_media_obj = await getFirstMediaObject(item.media_objs);
     if(first_media_obj){
       const els_media = await createMediaElements([first_media_obj], item.url)
-      els_media.forEach(el_media => {
-        createIframeResizePaddle(el_media);
-        item_els.media.appendChild(el_media)
-      });
+      for(el_media of els_media) {
+        await createMediaFilterActions(el_media)
+        await createIframeResizePaddle(el_media);
+        await item_els.media.appendChild(el_media)
+      }
     }
     item_els.loadmore.addEventListener('click', () => { handleClickLoadMore(item_els.media, item_els.loadmore, item.url, item.media_objs, first_media_obj) })
+    if(time_ago) item_els.container.appendChild(item_els.date);
     item_els.container.appendChild(item_els.title);
     item_els.container.appendChild(item_els.media);
     item_els.container.appendChild(item_els.loadmore);
     if(els.input_feedurl.value === feed_url) await els.content.appendChild(item_els.container);
     if(i === feed_item_objs.length - 1) els.loading.classList.remove('on');
-  })
+  }
 }
 
 const handleParseFeedError = (error) => {

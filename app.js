@@ -335,8 +335,8 @@ const start = async (event) => {
     menu_feeds: document.getElementById('menu-feeds'),
     content: document.getElementById('content'),
   }
-  createContentFiltersMenu();
-  createMediaFiltersMenu();
+  // createContentFiltersMenu();
+  // createMediaFiltersMenu();
   document.addEventListener('click', (event) => { if(!event.target.closest('.active')) hideActiveMenus(event) });
   els.logo.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }) });
   els.action_showfeeds.addEventListener('click', () => { handleClickShowFeeds() });

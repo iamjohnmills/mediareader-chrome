@@ -11,11 +11,13 @@ class Store {
     await this.initializeContentFilters();
     return;
   }
+  resetStorage(){
+    chrome.storage.sync.remove(['filters_media'], (result) => { });
+  }
   initializeFeeds(){
     return new Promise((resolve, reject) => {
       chrome.storage.sync.get('feeds', (result) => {
         if(Object.keys(result).length !== 0) this.feeds = result.feeds;
-        console.log(result);
         return resolve(true);
       });
     });
@@ -71,10 +73,13 @@ class Store {
   async removeFeed(feed_url){
     const index = this.feeds.findIndex(feed => feed.url === feed_url);
     await this.feeds.splice(index,1);
-    return await this.saveFeeds();
+    this.filters_media = await this.filters_media.filter(filter => filter.feed !== feed_url);
+    await this.saveMediaFilters();
+    await this.saveFeeds();
+    return;
   }
   async createMediaFilter(rule,feed_url){
-    const exists = this.filters_media.findIndex(filter => filter.rule === rule) !== -1;
+    const exists = this.filters_media.findIndex(filter => filter.rule === rule && filter.feed === feed_url) !== -1;
     if(exists) return false;
     const created_at = new Date();
     const filter = { rule: rule, feed: feed_url, created_at: created_at.toISOString() };
@@ -82,12 +87,12 @@ class Store {
     return await this.saveMediaFilters();
   }
   async removeMediaFilter(rule,feed_url){
-    const index = this.filters_media.findIndex(filter => feed.rule === rule && feed.url === feed_url);
+    const index = this.filters_media.findIndex(filter => filter.rule === rule && filter.feed === feed_url);
     await this.filters_media.splice(index,1);
     return await this.saveMediaFilters();
   }
   async createContentFilter(rule,feed_url){
-    const exists = this.filters_content.findIndex(filter => filter.rule === rule) !== -1;
+    const exists = this.filters_content.findIndex(filter => filter.rule === rule && filter.feed === feed_url) !== -1;
     if(exists) return false;
     const created_at = new Date();
     const filter = { filter: rule, feed: feed_url, created_at: created_at.toISOString() };
@@ -95,7 +100,7 @@ class Store {
     return await this.saveContentFilters();
   }
   async removeContentFilter(rule,url){
-    const index = this.filters_content.findIndex(filter => feed.rule === rule && feed.url === url);
+    const index = this.filters_content.findIndex(filter => filter.rule === rule && filter.feed === feed_url);
     await this.filters_content.splice(index,1);
     return await this.saveContentFilters();
   }

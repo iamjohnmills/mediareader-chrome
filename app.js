@@ -124,10 +124,11 @@ const handleParseSourceSuccess = async (media_objs, root, button, feed_media_obj
   }
 }
 const handleFetchSourceError = (error,button) => {
-  button.innerHTML = `Error fetching source url. ${error}`;
+  button.setAttribute('data-state','not-loaded');
+  button.innerHTML = `Error fetching source url. <i>${error.statusText}</i> Try again`;
 }
 const handleParseSourceError = (error,button) => {
-  button.innerHTML = `Error parsing source for media. ${error}`;
+  button.innerHTML = `Error parsing source for media. <i>${error}</i>`;
 }
 
 
@@ -184,7 +185,7 @@ const createMediaElements = (media_objs, url) => {
     item_els.createfilter.innerHTML = `<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.354 4.646L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 1 1 .708-.708z"/></svg>`;
     item_els.filters.setAttribute('class','media-actions flex-center');
     item_els.createfilter.setAttribute('class','flex-center');
-    item_els.createfilter.addEventListener('click', (event) => { handleClickCreateMediaFilter(media_obj.url) } );
+    item_els.createfilter.addEventListener('click', (event) => { handleClickCreateMediaFilter(item_els.wrapper,media_obj.url) } );
     item_els.filters.appendChild(item_els.createfilter);
     item_els.caption.appendChild(item_els.filters);
     item_els.figure.appendChild(item_els.caption)
@@ -305,7 +306,8 @@ const handleClickMediaFilters = async () => {
   await createFeedsMenu();
   setActiveMenu(els.menu_mediafilters,els.action_showmediafilters)
 }
-const handleClickCreateMediaFilter = async (rule) => {
+const handleClickCreateMediaFilter = async (root,rule) => {
+  root.classList.add('removed');
   await store.createMediaFilter(rule,current_feed);
   createMediaFiltersMenu();
 }

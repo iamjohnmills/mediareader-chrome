@@ -16,7 +16,7 @@ class MediaReader {
   async getURL(url,method='GET',binary=false){
     var xhr = new XMLHttpRequest();
     return new Promise(function(resolve,reject){
-      if(!url.startsWith('http')) return reject({ statusText: 'Invalid URL' });
+      if(!url.startsWith('http')) return reject({ statusText: 'Invalid URL.' });
       xhr.onreadystatechange = function(){
         if(xhr.readyState !== 4) return;
         if(xhr.status >= 200 && xhr.status < 300){
@@ -32,7 +32,7 @@ class MediaReader {
           return reject({
             url: url,
             status: xhr.status,
-            statusText: xhr.statusText ? xhr.statusText : 'Error getting URL',
+            statusText: xhr.statusText ? xhr.statusText : 'Error getting URL.',
           });
         }
       }
@@ -391,7 +391,7 @@ class MediaReader {
       var xml = parser.parseFromString(string, 'text/xml');
       if(xml.querySelector('rss') == null && xml.querySelector('feed') == null) throw 'Not a valid feed';
       var item_nodes = xml.querySelectorAll('rss > channel > item, feed > entry');
-      const items = await Promise.all( Array.from(item_nodes).filter(node => !this._stringInArray( node.querySelector('title').textContent, content_title_filters) ).map(async (node) => {
+      const items = await Promise.all( Array.from(item_nodes).filter(node => !node.querySelector('title') || (node.querySelector('title') && !this._stringInArray( node.querySelector('title').textContent, content_title_filters)) ).map(async (node) => {
         let media_objs_content = await this.getMediaInString(node.textContent,media_url_filters);
         let media_objs_node = await this.getMediaInString(node.innerHTML.replaceAll(/<!\[CDATA\[|\]\]>/gm,''),media_url_filters);
         return {

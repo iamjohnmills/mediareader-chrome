@@ -25,7 +25,8 @@ const _timeAgo = (date) => {
 // Fetch Feed
 const handleFetchFeedSuccess = async (feed_raw,url) => {
   await store.createFeed(url);
-  current_feed = url;
+  const content_filters = await store.getContentFilters(current_feed).map(filter => filter.rule);
+  const media_filters = await store.getMediaFilters(current_feed).map(filter => filter.rule);
   mediareader.parseFeed(feed_raw,content_filters,media_filters).then((response) => { handleParseFeedSuccess(response,url) }).catch((error) => { handleParseFeedError(error) } );
 }
 const handleParseFeedSuccess = async (feed_item_objs,feed_url) => {
@@ -49,7 +50,7 @@ const handleParseFeedSuccess = async (feed_item_objs,feed_url) => {
     if(first_media_obj){
       const els_media = await createMediaElements([first_media_obj], item.url)
       for(el_media of els_media) {
-        await createMediaFilterActions(el_media)
+        // await createMediaFilterActions(el_media)
         await createIframeResizePaddle(el_media);
         await item_els.media.appendChild(el_media)
       }
@@ -89,7 +90,8 @@ const getFirstMediaObject = async (media_objs) => {
 //
 //
 // Fetch Source
-const handleFetchSourceSuccess = (source_raw, root, button, feed_media_objs, url, first_media_obj) => {
+const handleFetchSourceSuccess = async (source_raw, root, button, feed_media_objs, url, first_media_obj) => {
+  const media_filters = await store.getMediaFilters(current_feed).map(filter => filter.rule);
   mediareader.getMediaInString(source_raw,media_filters).then((response) => { handleParseSourceSuccess(response, root, button, feed_media_objs, url, first_media_obj) }).catch((error) => { handleParseSourceError(error,button) } );
 }
 const handleParseSourceSuccess = async (media_objs, root, button, feed_media_objs=[], url, first_media_obj) => {
@@ -115,7 +117,7 @@ const handleParseSourceSuccess = async (media_objs, root, button, feed_media_obj
     button.innerHTML = `Found ${unique.length} media source${unique.length !== 1 ? 's' : ''}.`;
     const els_media = await createMediaElements(unique, url);
     for(el_media of els_media) {
-      await createMediaFilterActions(el_media)
+      // await createMediaFilterActions(el_media)
       await createIframeResizePaddle(el_media);
       await root.appendChild(el_media);
     }
@@ -144,18 +146,18 @@ const createIframeResizePaddle = (root) => {
   item_els.container.addEventListener('click', (event) => { iframe.style.height = `${parseInt(iframe.style.height) + 215}px` } );
   root.appendChild(item_els.container);
 }
-const createMediaFilterActions = (root) => {
-  const item_els = {
-    container: document.createElement('div'),
-    createfilter: document.createElement('button'),
-  }
-  item_els.createfilter.innerHTML = `<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.354 4.646L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 1 1 .708-.708z"/></svg>`;
-  item_els.container.setAttribute('class','media-actions flex-center');
-  item_els.createfilter.setAttribute('class','flex-center');
-  item_els.createfilter.addEventListener('click', (event) => {  } );
-  item_els.container.appendChild(item_els.createfilter);
-  root.querySelector('figcaption').appendChild(item_els.container);
-}
+// const createMediaFilterActions = (root) => {
+//   const item_els = {
+//     container: document.createElement('div'),
+//     createfilter: document.createElement('button'),
+//   }
+//   item_els.createfilter.innerHTML = `<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.354 4.646L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 1 1 .708-.708z"/></svg>`;
+//   item_els.container.setAttribute('class','media-actions flex-center');
+//   item_els.createfilter.setAttribute('class','flex-center');
+//   item_els.createfilter.addEventListener('click', (event) => { store.createMediaFilter(current_feed,) } );
+//   item_els.container.appendChild(item_els.createfilter);
+//   root.querySelector('figcaption').appendChild(item_els.container);
+// }
 const createMediaElements = (media_objs, url) => {
   return media_objs.map( (media_obj) => {
     const item_els = {
@@ -163,6 +165,8 @@ const createMediaElements = (media_objs, url) => {
       container: document.createElement('div'),
       figure: document.createElement('figure'),
       caption: document.createElement('figcaption'),
+      filters: document.createElement('div'),
+      createfilter: document.createElement('button'),
     }
     item_els.wrapper.setAttribute('class',`media-wrapper ${media_obj.type} ${(media_obj.brand ? media_obj.brand : 'default')}`);
     item_els.container.setAttribute('class',`media ${media_obj.type} ${(media_obj.brand ? media_obj.brand : 'default')}`);
@@ -177,6 +181,12 @@ const createMediaElements = (media_objs, url) => {
       item_els.figure.innerHTML = `<iframe style="height:${media_obj.height}px" src="${media_obj.url}" />`;
     }
     item_els.caption.innerHTML = `<span>${media_obj.url}</span>`;
+    item_els.createfilter.innerHTML = `<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.354 4.646L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 1 1 .708-.708z"/></svg>`;
+    item_els.filters.setAttribute('class','media-actions flex-center');
+    item_els.createfilter.setAttribute('class','flex-center');
+    item_els.createfilter.addEventListener('click', (event) => { handleClickCreateMediaFilter(media_obj.url) } );
+    item_els.filters.appendChild(item_els.createfilter);
+    item_els.caption.appendChild(item_els.filters);
     item_els.figure.appendChild(item_els.caption)
     item_els.container.appendChild(item_els.figure)
     item_els.wrapper.appendChild(item_els.container)
@@ -185,15 +195,15 @@ const createMediaElements = (media_objs, url) => {
 }
 const createMediaFiltersMenu = () => {
   els.menu_mediafilters.innerHTML = ``;
-  media_filters.forEach(filter => {
+  store.getMediaFilters(current_feed).forEach(filter => {
     const item_els = {
       container: document.createElement('menuitem'),
       filter: document.createElement('span'),
       remove: document.createElement('button'),
     }
-    item_els.filter.innerHTML = filter;
+    item_els.filter.innerHTML = filter.rule;
     item_els.remove.innerHTML = 'x';
-    item_els.remove.addEventListener('click',() => { handleClickRemoveMediaFilter(filter) })
+    item_els.remove.addEventListener('click',() => { handleClickRemoveMediaFilter(filter.rule) })
     item_els.container.appendChild(item_els.filter);
     item_els.container.appendChild(item_els.remove);
     els.menu_mediafilters.appendChild(item_els.container);
@@ -201,13 +211,13 @@ const createMediaFiltersMenu = () => {
 }
 const createContentFiltersMenu = () => {
   els.menu_contentfilters.innerHTML = ``;
-  content_filters.forEach(filter => {
+  store.getContentFilters(current_feed).forEach(filter => {
     const item_els = {
       container: document.createElement('menuitem'),
       filter: document.createElement('span'),
       remove: document.createElement('button'),
     }
-    item_els.filter.innerHTML = filter;
+    item_els.filter.innerHTML = filter.rule;
     item_els.remove.innerHTML = 'x';
     item_els.remove.addEventListener('click',() => { handleClickRemoveContentFilter(filter) })
     item_els.container.appendChild(item_els.filter);
@@ -242,6 +252,8 @@ const createFeedsMenu = () => {
 const handleLoadFeed = async function(url){
   els.content.innerHTML = ``;
   els.loading.classList.add('on');
+  current_feed = url;
+  await createMediaFiltersMenu();
   mediareader.getURL(url).then( (response) => { handleFetchFeedSuccess(response,url) }).catch( (error) => { handleFetchFeedError(error,url) });
 }
 const handleClickLoadMore = (root, button, url, feed_media_objs, first_media_obj) => {
@@ -285,6 +297,22 @@ const handleClickShowFeeds = async () => {
   await createFeedsMenu();
   setActiveMenu(els.menu_feeds,els.action_showfeeds)
 }
+const handleClickContentFilters = async () => {
+  await createFeedsMenu();
+  setActiveMenu(els.menu_contentfilters,els.action_showcontentfilters)
+}
+const handleClickMediaFilters = async () => {
+  await createFeedsMenu();
+  setActiveMenu(els.menu_mediafilters,els.action_showmediafilters)
+}
+const handleClickCreateMediaFilter = async (rule) => {
+  await store.createMediaFilter(rule,current_feed);
+  createMediaFiltersMenu();
+}
+const handleClickRemoveMediaFilter = async (rule) => {
+  await store.removeMediaFilter(rule,current_feed);
+  createMediaFiltersMenu();
+}
 
 
 
@@ -312,8 +340,8 @@ const start = async (event) => {
   document.addEventListener('click', (event) => { if(!event.target.closest('.active')) hideActiveMenus(event) });
   els.logo.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }) });
   els.action_showfeeds.addEventListener('click', () => { handleClickShowFeeds() });
-  els.action_showcontentfilters.addEventListener('click', () => { setActiveMenu(els.menu_contentfilters,els.action_showcontentfilters) });
-  els.action_showmediafilters.addEventListener('click', () => { setActiveMenu(els.menu_mediafilters,els.action_showmediafilters) });
+  els.action_showcontentfilters.addEventListener('click', () => { handleClickContentFilters() });
+  els.action_showmediafilters.addEventListener('click', () => { handleClickMediaFilters() });
   els.input_feedurl.addEventListener('keydown', (event) => { if(event.key === 'Enter' || event.keyCode === 13) handleInputFeed(event.target.value) });
 }
 

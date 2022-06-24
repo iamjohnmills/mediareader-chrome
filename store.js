@@ -5,28 +5,80 @@ class Store {
     this.filters_media = []; // { filter: '', feed: '' }
     this.filters_content = []; // { filter: '', feed: '' }
   }
-  getData(){
-    // chrome.storage.sync.get(/* String or Array */["yourBody"], function(items){
-    //     //  items = [ { "yourBody": "myBody" } ]
-    // });
-    // chrome.storage.local.get(/* String or Array */["phasersTo"], function(items){
-    //     //  items = [ { "phasersTo": "awesome" } ]
-    // });
+  async initialize(){
+    await this.initializeFeeds();
+    await this.initializeMediaFilters();
+    await this.initializeContentFilters();
+    return;
   }
-  setData(){
-    // chrome.storage.sync.set({ "yourBody": "myBody" }, function(){
-    //     //  A data saved callback omg so fancy
-    // });
-    // chrome.storage.local.set({ "phasersTo": "awesome" }, function(){
-    //     //  Data's been saved boys and girls, go on home
-    // });
+  initializeFeeds(){
+    return new Promise((resolve, reject) => {
+      chrome.storage.sync.get('feeds', (result) => {
+        if(Object.keys(result).length !== 0) this.feeds = result.feeds;
+        console.log(result);
+        return resolve(true);
+      });
+    });
+  }
+  initializeMediaFilters(){
+    return new Promise((resolve, reject) => {
+      chrome.storage.sync.get('filters_media', (result) => {
+        if(Object.keys(result).length !== 0) this.filters_media = result.filters_media;
+        return resolve(true);
+      });
+    });
+  }
+  initializeContentFilters(){
+    return new Promise((resolve, reject) => {
+      chrome.storage.sync.get('filters_content', (result) => {
+        if(Object.keys(result).length !== 0) this.filters_content = result.filters_content;
+        return resolve(true);
+      });
+    });
+  }
+  saveFeeds(){
+    return new Promise((resolve, reject) => {
+      chrome.storage.sync.set({feeds: this.feeds}, () => {
+        return resolve(true);
+      });
+    });
+  }
+  saveMediaFilters(){
+    return new Promise((resolve, reject) => {
+      chrome.storage.sync.set({filters_media: this.filters_media}, () => {
+        return resolve(true);
+      });
+    });
+  }
+  saveContentFilters(){
+    return new Promise((resolve, reject) => {
+      chrome.storage.sync.set({filters_content: this.filters_content}, () => {
+        return resolve(true);
+      });
+    });
   }
   getFeeds(){
-    return this.feeds;
+    return this.feeds.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  }
+  async createFeed(url){
+    const exists = this.feeds.findIndex(feed => feed.url === url) !== -1;
+    if(exists) return false;
+    const created_at = new Date();
+    const feed = { url: url, created_at: created_at.toISOString() };
+    await this.feeds.push(feed);
+    return await this.saveFeeds();
+  }
+  async removeFeed(url){
+    const index = this.feeds.findIndex(feed => feed.url === url);
+    // if(index === -1) return false;
+    await this.feeds.splice(index,1);
+    return await this.saveFeeds();
   }
   getMediaFilters(feed){
+    return this.filters_media;
   }
   getContentFilters(feed){
+    return this.filters_content;
   }
 }
 

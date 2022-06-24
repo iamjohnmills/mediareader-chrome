@@ -16,6 +16,7 @@ class MediaReader {
   async getURL(url,method='GET',binary=false){
     var xhr = new XMLHttpRequest();
     return new Promise(function(resolve,reject){
+      if(!url.startsWith('http')) return reject({ statusText: 'Invalid URL' });
       xhr.onreadystatechange = function(){
         if(xhr.readyState !== 4) return;
         if(xhr.status >= 200 && xhr.status < 300){
@@ -320,16 +321,17 @@ class MediaReader {
   /**
    *  Get all media URLs from a string
    *  @param {string} string - A string of text (ideally with HTML nodes)
+   *  @param {array<string>} media_url_filters - an array of url strings to exclude
    *  @returns {(array<media>|boolean)} - An array of media objects
    */
-  async getMediaInString(string){
+  async getMediaInString(string,media_url_filters=[]){
     try {
       if(typeof string == 'undefined') throw 'No string provided.'
       // if(typeof to_merge == 'undefined') to_merge = [];
       var media = await this.get_media_objs(string);
       //var merged = await to_merge.concat(media.flat());
       var embeds = await this.get_embed_objs(string);
-      var merged = await media.concat(embeds).flat();
+      var merged = await media.concat(embeds).flat().filter(item => !this._stringInArray(item.url,media_url_filters) );
       // var merged = await to_merge.concat(media.concat(embeds).flat());
       return [...new Map(merged.map(item => [item.url, item])).values()];
         // return merged.filter((media,i) => {
@@ -360,6 +362,16 @@ class MediaReader {
   }
 
   /**
+   *  Determine if a string is in an array of strings
+   *  @param {string} string - A string
+   *  @param {arr<array>} arr - an array of strings
+   *  @returns {boolean} - True if in array
+   */
+  _stringInArray(string, arr=[]){
+    return arr.some(compare_string => string.toLowerCase().includes(compare_string.toLowerCase()))
+  }
+
+  /**
    * @typedef feed_item
    * @property {string} title - The feed item title
    * @property {string} url - The feed item link
@@ -368,18 +380,20 @@ class MediaReader {
   /**
    *  Parse feed items from string
    *  @param {string} string - A URL
+   *  @param {array<string>} content_title_filters - an array of strings to exclude in feed items that include in the title
+   *  @param {array<string>} media_url_filters - an array of url strings to exclude from media
    *  @returns {(array<feed_item>|boolean)} - An array of feed item objects
    */
-  async parseFeed(string){
+  async parseFeed(string,content_title_filters=[],media_url_filters=[]){
     try {
       if(!string) throw 'No string to parse'
       var parser = new DOMParser();
       var xml = parser.parseFromString(string, 'text/xml');
       if(xml.querySelector('rss') == null && xml.querySelector('feed') == null) throw 'Not a valid feed';
       var item_nodes = xml.querySelectorAll('rss > channel > item, feed > entry');
-      const items = await Promise.all( Array.from(item_nodes).map(async (node) => {
-        let media_objs_content = await this.getMediaInString(node.textContent);
-        let media_objs_node = await this.getMediaInString(node.innerHTML.replaceAll(/<!\[CDATA\[|\]\]>/gm,''));
+      const items = await Promise.all( Array.from(item_nodes).filter(node => !this._stringInArray( node.querySelector('title').textContent, content_title_filters) ).map(async (node) => {
+        let media_objs_content = await this.getMediaInString(node.textContent,media_url_filters);
+        let media_objs_node = await this.getMediaInString(node.innerHTML.replaceAll(/<!\[CDATA\[|\]\]>/gm,''),media_url_filters);
         return {
           title: node.querySelector('title') ? node.querySelector('title').textContent.replace(/<\/?[^>]+(>|$)/g, '') : 'No Title',
           date: node.querySelector('pubDate,published') ? node.querySelector('pubDate,published').textContent.replace(/<\/?[^>]+(>|$)/g, '') : 'No Date',

@@ -213,7 +213,6 @@ const createContentFiltersMenu = () => {
   }
   els.menu_contentfilters.innerHTML = ``;
   store.getContentFilters().forEach(filter => {
-    console.log(filter)
     const item_els = {
       container: document.createElement('menuitem'),
       filter: document.createElement('span'),
@@ -300,6 +299,8 @@ const setActiveMenu = (active_menu, active_action) => {
 }
 const hideActiveMenus = () => {
   if(current_feed && !els.input_feedurl.value) els.input_feedurl.value = current_feed;
+  els.input_feedurl.setAttribute('data-action', 'feed');
+  els.input_feedurl.setAttribute('placeholder', 'Add Feed URL');
   const menu_active = document.querySelector('menu.active');
   const action_active = document.querySelector('button.action.active');
   if(action_active && menu_active) {
@@ -309,7 +310,7 @@ const hideActiveMenus = () => {
 }
 const handleActionInput = async (value) => {
   if(els.input_feedurl.dataset.action === 'feed'){
-    handleLoadFeed(url);
+    handleLoadFeed(value);
   } else if(els.input_feedurl.dataset.action === 'contentfilter') {
     await store.createContentFilter(value);
     createContentFiltersMenu();

@@ -7,6 +7,8 @@ https://www.youtube.com/feeds/videos.xml?channel_id=UCI4fHQkguBNW3SwTqmehzjw
 https://www.youtube.com/feeds/videos.xml?channel_id=UCi8e0iOVk1fEOogdfu4YgfA
 https://www.youtube.com/feeds/videos.xml?playlist_id=PLYjm6U0oFW7zxisuVKVrsHeNJao2mDEIi
 
+https://www.pushsquare.com/feeds/latest
+
 https://hnrss.org/newest
 https://hnrss.org/show
 

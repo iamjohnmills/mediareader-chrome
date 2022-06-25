@@ -396,7 +396,7 @@ class MediaReader {
         let media_objs_node = await this.getMediaInString(node.innerHTML.replaceAll(/<!\[CDATA\[|\]\]>/gm,''),media_url_filters);
         return {
           title: node.querySelector('title') ? node.querySelector('title').textContent.replace(/<\/?[^>]+(>|$)/g, '') : 'No Title',
-          date: node.querySelector('pubDate,published') ? node.querySelector('pubDate,published').textContent.replace(/<\/?[^>]+(>|$)/g, '') : 'No Date',
+          date: node.querySelector('pubDate,published,updated') ? node.querySelector('pubDate,published,updated').textContent.replace(/<\/?[^>]+(>|$)/g, '') : 'No Date',
           url: await this.getUrlFromFeedNode(node),
           media_objs: [...new Map(media_objs_content.concat(media_objs_node).map(item => [item.url, item])).values()],
           // media_objs: await this.getMediaInString(node.innerHTML.replaceAll(/<!\[CDATA\[|\]\]>/gm,''), media_content_objs),

@@ -31,7 +31,9 @@
     menuitem { display: flex; align-items: center; justify-content: space-between; padding: 2px 0; }
     menuitem a.active { font-weight: bold; }
     menuitem > span, menuitem > a { flex-grow: 0; flex-shrink: 1; max-width: 440px; word-wrap: break-word; padding-right: 15px; }
-    menu button { cursor: pointer; }
+    menuitem > a { color: #7e23e2; }
+    menu button { color: #999; background: transparent; cursor: pointer; padding: 0 2px; border: 0; outline: none; }
+    menu button:hover { color: #000; }
 
   .loading { flex-shrink: 0; display: none; margin: 0 8px; z-index: 4; box-sizing: border-box; width: 16px; height: 16px; border-radius: 50%; border-top: 2px solid rgba(0,0,0,0.4); border-right: 2px solid transparent; animation: spin .6s linear infinite; }
     .loading.on { display: block; }
@@ -75,7 +77,7 @@
         <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
       </svg>
     </button>
-    <input id="input-feedurl" type="text" autocomplete="off" placeholder="Add Feed URL..." />
+    <input id="input-feedurl" type="text" autocomplete="off" data-action="feed" placeholder="Add Feed URL..." />
     <div id="loading" class="loading"></div>
     <button id="action-showmediafilters" class="flex-center action">
       <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">

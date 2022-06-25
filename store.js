@@ -91,23 +91,23 @@ class Store {
     await this.filters_media.splice(index,1);
     return await this.saveMediaFilters();
   }
-  async createContentFilter(rule,feed_url){
-    const exists = this.filters_content.findIndex(filter => filter.rule === rule && filter.feed === feed_url) !== -1;
+  async createContentFilter(rule){
+    const exists = this.filters_content.findIndex(filter => filter.rule === rule) !== -1;
     if(exists) return false;
     const created_at = new Date();
-    const filter = { filter: rule, feed: feed_url, created_at: created_at.toISOString() };
+    const filter = { rule: rule, created_at: created_at.toISOString() };
     await this.filters_content.push(filter);
     return await this.saveContentFilters();
   }
-  async removeContentFilter(rule,url){
-    const index = this.filters_content.findIndex(filter => filter.rule === rule && filter.feed === feed_url);
+  async removeContentFilter(rule){
+    const index = this.filters_content.findIndex(filter => filter.rule === rule);
     await this.filters_content.splice(index,1);
     return await this.saveContentFilters();
   }
   getMediaFilters(feed_url){
     return this.filters_media.filter(filter => filter.feed === feed_url).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   }
-  getContentFilters(feed_url){
-    return this.filters_content.filter(filter => filter.feed === feed_url).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  getContentFilters(){
+    return this.filters_content.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   }
 }

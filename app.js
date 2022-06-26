@@ -19,7 +19,12 @@ const _timeAgo = (date) => {
   return `Just now`
 }
 
-
+const _htmlToElement = (html) => {
+  const template = document.createElement('template');
+  html = html.trim();
+  template.innerHTML = html;
+  return template.content.firstChild;
+}
 
 
 //
@@ -27,6 +32,7 @@ const _timeAgo = (date) => {
 // Fetch Feed
 const handleFetchFeedSuccess = async (feed_raw,url) => {
   await store.createFeed(url);
+  await createFeedsMenu();
   const content_filters = await store.getContentFilters(current_feed).map(filter => filter.rule);
   const media_filters = await store.getMediaFilters(current_feed).map(filter => filter.rule);
   mediareader.parseFeed(feed_raw,content_filters,media_filters).then((response) => { handleParseFeedSuccess(response,url) }).catch((error) => { handleParseFeedError(error) } );
@@ -181,6 +187,155 @@ const createMediaElements = (media_objs, url) => {
     return item_els.wrapper
   });
 }
+const createFeedsMenu = () => {
+  if(!store.getFeeds().length){
+    els.menu_feeds.innerHTML = `Feeds that you enter will appear here.`;
+    return;
+  }
+  els.menu_feeds.innerHTML = ``;
+  store.getFeeds().forEach(feed => {
+    const item_els = {
+      container: document.createElement('menuitem'),
+      url: document.createElement('a'),
+      remove: document.createElement('button'),
+    }
+    item_els.url.setAttribute('href','#');
+    item_els.container.setAttribute('class','stretch');
+    if(feed.url === current_feed) item_els.url.setAttribute('class','active');
+    item_els.url.innerHTML = feed.url;
+    item_els.url.addEventListener('click',(event) => { handleClickFeed(event,feed.url) })
+    item_els.remove.innerHTML = 'x';
+    item_els.remove.addEventListener('click',() => { handleClickRemoveFeed(feed.url) })
+    item_els.container.appendChild(item_els.url);
+    item_els.container.appendChild(item_els.remove);
+    els.menu_feeds.appendChild(item_els.container);
+  })
+}
+const createConfirmActionItem = async (options) => {
+  const item_els = {
+    container: document.createElement(options.container_tag),
+    action: _htmlToElement(`<a href="#">${options.action_text}</a>`),
+    confirm: _htmlToElement(`<span style="display:none">${options.confirm_text}</span>`),
+    yes: _htmlToElement(`<a style="display:none" href="#">Yes</a>`),
+    cancel: _htmlToElement(`<a style="display:none" href="#">Cancel</a>`),
+  }
+  item_els.container.appendChild(item_els.action);
+  item_els.container.appendChild(item_els.confirm);
+  item_els.container.appendChild(item_els.yes);
+  item_els.container.appendChild(item_els.cancel);
+  item_els.action.addEventListener('click',(event) => {
+    item_els.action.style.display = 'none';
+    item_els.confirm.style = '';
+    item_els.yes.style = '';
+    item_els.cancel.style = '';
+  });
+  item_els.cancel.addEventListener('click',(event) => {
+    item_els.action.style = '';
+    item_els.confirm.style.display = 'none';
+    item_els.yes.style.display = 'none';
+    item_els.cancel.style.display = 'none';
+  });
+  item_els.yes.addEventListener('click', async (event) => {
+    await options.on_success();
+    item_els.confirm.innerHTML = options.on_success_text;
+    item_els.yes.style.display = 'none';
+    item_els.cancel.style.display = 'none';
+  });
+  return item_els.container;
+}
+const createSettingsMenu = async () => {
+  els.menu_settings.innerHTML = ``;
+  const has_feeds = await store.getFeeds().length;
+  const has_mediafilters = await store.getMediaFilters().length;
+  const has_contentfilters = await store.getContentFilters().length;
+  const item_els = {
+    container: document.createElement('div'),
+    import_opml: {
+      container: document.createElement('menuitem'),
+      url: document.createElement('a'),
+      message: document.createElement('span'),
+      file: _htmlToElement(`<input style="display:none" type="file" />`)
+    },
+    export_opml: {
+      container: document.createElement('menuitem'),
+      url: document.createElement('a'),
+    },
+    clear_feeds: await createConfirmActionItem({
+      container_tag: 'menuitem',
+      action_text: 'Clear Feeds',
+      confirm_text: 'Are you sure you want to clear all feeds?',
+      on_success_text: 'Feeds cleared.',
+      on_success: async () => {
+        item_els.export_opml.container.style.display = 'none';
+        await store.clearFeeds();
+        createFeedsMenu();
+      },
+    }),
+    clear_mediafilters: await createConfirmActionItem({
+      container_tag: 'menuitem',
+      action_text: 'Clear Media Filters',
+      confirm_text: 'Are you sure you want to clear all media filters?',
+      on_success_text: 'Media filters cleared.',
+      on_success: async () => {
+        await store.clearMediaFilters();
+        createMediaFiltersMenu();
+      },
+    }),
+    clear_contentfilters: await createConfirmActionItem({
+      container_tag: 'menuitem',
+      action_text: 'Clear Content Filters',
+      confirm_text: 'Are you sure you want to clear all content filters?',
+      on_success_text: 'Content filters cleared.',
+      on_success: async () => {
+        await store.clearContentFilters();
+        createContentFiltersMenu();
+      },
+    }),
+  }
+
+  item_els.import_opml.url.innerHTML = 'Import OPML';
+  item_els.import_opml.url.href = '#';
+  item_els.import_opml.file.addEventListener('change', (event) => {
+    item_els.import_opml.message.innerHTML = ``;
+    if(event.target.size > 20000){
+      item_els.import_opml.message.innerHTML = `File must be less than 20kb.`;
+      return;
+    };
+    const reader = new FileReader();
+    reader.onload = async (file) => {
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(file.target.result, 'text/xml');
+      if( xml.documentElement.nodeName == 'parsererror' || !xml.querySelector('outline') ){
+        item_els.import_opml.message.innerHTML = `File must be a valid OPML file.`;
+      } else {
+        await store.importOPML(xml);
+        item_els.import_opml.message.innerHTML = `OPML file imported.`;
+      }
+    };
+    reader.readAsText(event.target.files[0]);
+  })
+  item_els.import_opml.url.addEventListener('click',(event) => {
+    event.preventDefault();
+    item_els.import_opml.file.click();
+  })
+  item_els.import_opml.container.appendChild(item_els.import_opml.url);
+  item_els.import_opml.container.appendChild(item_els.import_opml.message);
+  item_els.import_opml.container.appendChild(item_els.import_opml.file);
+  item_els.container.appendChild(item_els.import_opml.container);
+  if(has_feeds){
+    const feeds_opml = await store.exportFeedsOPML();
+    item_els.export_opml.url.href = window.URL.createObjectURL(new Blob([feeds_opml], {type: 'text/plain'}));
+    item_els.export_opml.url.download = 'mediareader-feeds.opml';
+    item_els.export_opml.url.innerHTML = 'Export OPML';
+    item_els.export_opml.container.appendChild(item_els.export_opml.url);
+    item_els.container.appendChild(item_els.export_opml.container);
+  }
+  if(has_feeds || has_mediafilters || has_contentfilters) item_els.container.appendChild(_htmlToElement('<hr/>'))
+  if(has_feeds) item_els.container.appendChild(item_els.clear_feeds);
+  if(has_mediafilters) item_els.container.appendChild(item_els.clear_mediafilters);
+  if(has_contentfilters) item_els.container.appendChild(item_els.clear_contentfilters);
+  els.menu_settings.appendChild(item_els.container);
+}
 const createMediaFiltersMenu = () => {
   if(!current_feed){
     els.menu_mediafilters.innerHTML = `Media from feeds that you remove will appear here.`;
@@ -197,6 +352,7 @@ const createMediaFiltersMenu = () => {
       filter: document.createElement('span'),
       remove: document.createElement('button'),
     }
+    item_els.container.classList.add('stretch');
     item_els.filter.innerHTML = filter.rule;
     item_els.remove.innerHTML = 'x';
     item_els.remove.addEventListener('click',() => { handleClickRemoveMediaFilter(filter.rule) })
@@ -218,6 +374,7 @@ const createContentFiltersMenu = () => {
       filter: document.createElement('span'),
       remove: document.createElement('button'),
     }
+    item_els.container.classList.add('stretch');
     item_els.filter.innerHTML = filter.rule;
     item_els.remove.innerHTML = 'x';
     item_els.remove.addEventListener('click',() => { handleClickRemoveContentFilter(filter.rule) })
@@ -226,29 +383,7 @@ const createContentFiltersMenu = () => {
     els.menu_contentfilters.appendChild(item_els.container);
   })
 }
-const createFeedsMenu = () => {
-  if(!store.getFeeds().length){
-    els.menu_feeds.innerHTML = `Feeds that you enter will appear here.`;
-    return;
-  }
-  els.menu_feeds.innerHTML = ``;
-  store.getFeeds().forEach(feed => {
-    const item_els = {
-      container: document.createElement('menuitem'),
-      url: document.createElement('a'),
-      remove: document.createElement('button'),
-    }
-    item_els.url.setAttribute('href','#');
-    if(feed.url === current_feed) item_els.url.setAttribute('class','active');
-    item_els.url.innerHTML = feed.url;
-    item_els.url.addEventListener('click',(event) => { handleClickFeed(event,feed.url) })
-    item_els.remove.innerHTML = 'x';
-    item_els.remove.addEventListener('click',() => { handleClickRemoveFeed(feed.url) })
-    item_els.container.appendChild(item_els.url);
-    item_els.container.appendChild(item_els.remove);
-    els.menu_feeds.appendChild(item_els.container);
-  })
-}
+
 
 
 
@@ -320,11 +455,15 @@ const handleClickShowFeeds = async () => {
   await createFeedsMenu();
   setActiveMenu(els.menu_feeds,els.action_showfeeds)
 }
-const handleClickContentFilters = async () => {
+const handleClickShowSettings = async () => {
+  await createSettingsMenu();
+  setActiveMenu(els.menu_settings,els.action_showsettings)
+}
+const handleClickShowContentFilters = async () => {
   await createContentFiltersMenu();
   setActiveMenu(els.menu_contentfilters,els.action_showcontentfilters)
 }
-const handleClickMediaFilters = async () => {
+const handleClickShowMediaFilters = async () => {
   await createMediaFiltersMenu();
   setActiveMenu(els.menu_mediafilters,els.action_showmediafilters)
 }
@@ -354,20 +493,24 @@ const start = async (event) => {
     logo: document.getElementById('logo'),
     nav: document.getElementById('nav'),
     action_showfeeds: document.getElementById('action-showfeeds'),
+    action_showsettings: document.getElementById('action-showsettings'),
     action_showmediafilters: document.getElementById('action-showmediafilters'),
     action_showcontentfilters: document.getElementById('action-showcontentfilters'),
     input_feedurl: document.getElementById('input-feedurl'),
     loading: document.getElementById('loading'),
+    error: document.getElementById('error'),
+    menu_feeds: document.getElementById('menu-feeds'),
+    menu_settings: document.getElementById('menu-settings'),
     menu_contentfilters: document.getElementById('menu-contentfilters'),
     menu_mediafilters: document.getElementById('menu-mediafilters'),
-    menu_feeds: document.getElementById('menu-feeds'),
     content: document.getElementById('content'),
   }
   document.addEventListener('click', (event) => { if(!event.target.closest('.active') && !event.target.closest('#input-feedurl')) hideActiveMenus(event) });
   els.logo.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }) });
   els.action_showfeeds.addEventListener('click', () => { handleClickShowFeeds() });
-  els.action_showcontentfilters.addEventListener('click', () => { handleClickContentFilters() });
-  els.action_showmediafilters.addEventListener('click', () => { handleClickMediaFilters() });
+  els.action_showsettings.addEventListener('click', () => { handleClickShowSettings() });
+  els.action_showmediafilters.addEventListener('click', () => { handleClickShowMediaFilters() });
+  els.action_showcontentfilters.addEventListener('click', () => { handleClickShowContentFilters() });
   els.input_feedurl.addEventListener('keydown', (event) => { if(event.key === 'Enter' || event.keyCode === 13) handleActionInput(event.target.value) });
 }
 

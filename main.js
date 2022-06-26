@@ -1,4 +1,3 @@
-
 chrome.action.onClicked.addListener(function(tab) {
   chrome.tabs.create({
     // Just use the full URL if you need to open an external page

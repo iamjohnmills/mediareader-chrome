@@ -389,8 +389,9 @@ class MediaReader {
       if(!string) throw 'No string to parse'
       var parser = new DOMParser();
       var xml = parser.parseFromString(string, 'text/xml');
-      if(xml.querySelector('rss') == null && xml.querySelector('feed') == null) throw 'Not a valid feed';
-      var item_nodes = xml.querySelectorAll('rss > channel > item, feed > entry');
+      // if(xml.querySelector('rss,feed') == null /* && xml.querySelector('feed') == null */) throw 'Not a valid feed';
+      var item_nodes = xml.querySelectorAll('item, entry');
+      if(!item_nodes.length) throw 'Not a valid feed';
       const items = await Promise.all( Array.from(item_nodes).filter(node => !node.querySelector('title') || (node.querySelector('title') && !this._stringInArray( node.querySelector('title').textContent, content_title_filters)) ).map(async (node) => {
         let media_objs_content = await this.getMediaInString(node.textContent,media_url_filters);
         let media_objs_node = await this.getMediaInString(node.innerHTML.replaceAll(/<!\[CDATA\[|\]\]>/gm,''),media_url_filters);

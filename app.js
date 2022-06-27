@@ -158,7 +158,7 @@ const createMediaElements = (media_objs, url) => {
       figure: document.createElement('figure'),
       caption: _htmlToElement(`<figcaption><span>${media_obj.url}</span></figcaption>`),
       filters: _htmlToElement(`<div class="media-actions flex-center"></div>`),
-      createfilter: _htmlToElement(`<button class="flex-center"><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.354 4.646L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 1 1 .708-.708z"/></svg></button>`),
+      createfilter: _htmlToElement(`<button class="remove-media flex-center"><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/></svg></button>`),
       iframe: _htmlToElement(`<iframe src="${media_obj.url}" height="${media_obj.height}" style="height:${media_obj.height}px"></iframe>`),
       resize: _htmlToElement(`<div class="resize flex-center" draggable="false"><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8zM7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708l2-2zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10z"/></svg></div>`),
     }
@@ -176,9 +176,9 @@ const createMediaElements = (media_objs, url) => {
     item_els.createfilter.addEventListener('click', (event) => {
       handleClickCreateMediaFilter(item_els.wrapper,media_obj.url)
     });
-    item_els.filters.appendChild(item_els.createfilter);
-    item_els.caption.appendChild(item_els.filters);
-    item_els.figure.appendChild(item_els.caption);
+    item_els.wrapper.appendChild(item_els.createfilter);
+    // item_els.caption.appendChild(item_els.filters);
+    // item_els.figure.appendChild(item_els.caption);
     item_els.container.appendChild(item_els.figure);
     item_els.wrapper.appendChild(item_els.container);
     return item_els.wrapper
@@ -193,7 +193,7 @@ const createFeedsMenu = () => {
   store.getFeeds().forEach(feed => {
     const item_els = {
       container: _htmlToElement(`<menuitem class="flex"></menuitem>`),
-      grip: _htmlToElement(`<span><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg></span>`),
+      // grip: _htmlToElement(`<span><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg></span>`),
       url: _htmlToElement(`<a class="flex-grow-1 ${feed.url === current_feed ? 'active' : ''}" href="#">${feed.url}</a>`),
       remove: _htmlToElement(`<button>x</button>`),
     }
@@ -203,7 +203,7 @@ const createFeedsMenu = () => {
     item_els.remove.addEventListener('click',() => {
       handleClickRemoveFeed(feed.url)
     })
-    item_els.container.appendChild(item_els.grip);
+    // item_els.container.appendChild(item_els.grip);
     item_els.container.appendChild(item_els.url);
     item_els.container.appendChild(item_els.remove);
     els.menu_feeds.appendChild(item_els.container);

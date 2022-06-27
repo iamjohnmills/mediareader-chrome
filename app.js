@@ -40,20 +40,14 @@ const handleFetchFeedSuccess = async (feed_raw,url) => {
 const handleParseFeedSuccess = async (feed_item_objs,feed_url) => {
   els.content.innerHTML = ``;
   for(const [i,item] of feed_item_objs.entries()){
+    const time_ago = _timeAgo(new Date(item.date));
     const item_els = {
       container: document.createElement('article'),
-      title: document.createElement('h2'),
-      date: document.createElement('time'),
-      media: document.createElement('div'),
-      loadmore: document.createElement('button'),
+      title: _htmlToElement(`<h2><a href="${item.url}" target="_blank">${item.title}</a></h2>`),
+      date: _htmlToElement(`<time>${time_ago}</time>`),
+      media: _htmlToElement(`<div class="medias"></div>`),
+      loadmore: _htmlToElement(`<button class="load-more" data-state="not-loaded">Load more media from source</button>`),
     }
-    const time_ago = _timeAgo(new Date(item.date));
-    item_els.date.innerHTML = time_ago;
-    item_els.media.setAttribute('class', 'medias');
-    item_els.loadmore.setAttribute('class', 'load-more');
-    item_els.loadmore.setAttribute('data-state', 'not-loaded');
-    item_els.title.innerHTML = `<a href="${item.url}" target="_blank">${item.title}</a>`;
-    item_els.loadmore.innerHTML = `Load more media from source`;
     let first_media_obj = await getFirstMediaObject(item.media_objs);
     if(first_media_obj){
       const els_media = await createMediaElements([first_media_obj], item.url)
@@ -61,7 +55,9 @@ const handleParseFeedSuccess = async (feed_item_objs,feed_url) => {
         await item_els.media.appendChild(el_media)
       }
     }
-    item_els.loadmore.addEventListener('click', () => { handleClickLoadMore(item_els.media, item_els.loadmore, item.url, item.media_objs, first_media_obj) })
+    item_els.loadmore.addEventListener('click', () => {
+      handleClickLoadMore(item_els.media, item_els.loadmore, item.url, item.media_objs, first_media_obj)
+    })
     if(time_ago) item_els.container.appendChild(item_els.date);
     item_els.container.appendChild(item_els.title);
     item_els.container.appendChild(item_els.media);
@@ -71,9 +67,11 @@ const handleParseFeedSuccess = async (feed_item_objs,feed_url) => {
   }
 }
 const handleFetchFeedError = (error,url) => {
-  const el_tryagain = document.createElement('a');
-  el_tryagain.addEventListener('click',(event) => { event.preventDefault(); handleLoadFeed(url); });
-  el_tryagain.innerHTML = ` <a href="#">Try again</a>`
+  const el_tryagain = _htmlToElement(`<a href="#">Try again</a>`);
+  el_tryagain.addEventListener('click',(event) => {
+    event.preventDefault();
+    handleLoadFeed(url);
+  });
   els.content.innerHTML = `Error loading feed: <i>${error.statusText}</i>`;
   els.content.appendChild(el_tryagain);
   els.loading.classList.remove('on')
@@ -100,7 +98,11 @@ const getFirstMediaObject = async (media_objs) => {
 // Fetch Source
 const handleFetchSourceSuccess = async (source_raw, root, button, feed_media_objs, url, first_media_obj) => {
   const media_filters = await store.getMediaFilters(current_feed).map(filter => filter.rule);
-  mediareader.getMediaInString(source_raw,media_filters).then((response) => { handleParseSourceSuccess(response, root, button, feed_media_objs, url, first_media_obj) }).catch((error) => { handleParseSourceError(error,button) } );
+  mediareader.getMediaInString(source_raw,media_filters).then((response) => {
+    handleParseSourceSuccess(response, root, button, feed_media_objs, url, first_media_obj)
+  }).catch((error) => {
+    handleParseSourceError(error,button)
+  });
 }
 const handleParseSourceSuccess = async (media_objs, root, button, feed_media_objs=[], url, first_media_obj) => {
   let merged = [...new Map(feed_media_objs.concat(media_objs).map(item => [item.url, item])).values()];
@@ -126,6 +128,7 @@ const handleParseSourceSuccess = async (media_objs, root, button, feed_media_obj
     button.innerHTML = `No source media found.`;
     button.setAttribute('data-state','loaded');
   } else {
+    button.setAttribute('data-state','loaded');
     button.innerHTML = `Found ${unique.length} media source${unique.length !== 1 ? 's' : ''}.`;
     const els_media = await createMediaElements(unique, url);
     for(el_media of els_media) {
@@ -150,17 +153,15 @@ const handleParseSourceError = (error,button) => {
 const createMediaElements = (media_objs, url) => {
   return media_objs.map( (media_obj) => {
     const item_els = {
-      wrapper: document.createElement('div'),
-      container: document.createElement('div'),
+      wrapper: _htmlToElement(`<div class="media-wrapper"></div>`),
+      container: _htmlToElement(`<div class="media"></div>`),
       figure: document.createElement('figure'),
-      caption: document.createElement('figcaption'),
-      filters: document.createElement('div'),
-      createfilter: document.createElement('button'),
-      resize: document.createElement('div')
+      caption: _htmlToElement(`<figcaption><span>${media_obj.url}</span></figcaption>`),
+      filters: _htmlToElement(`<div class="media-actions flex-center"></div>`),
+      createfilter: _htmlToElement(`<button class="flex-center"><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.354 4.646L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 1 1 .708-.708z"/></svg></button>`),
+      iframe: _htmlToElement(`<iframe src="${media_obj.url}" height="${media_obj.height}" style="height:${media_obj.height}px"></iframe>`),
+      resize: _htmlToElement(`<div class="resize flex-center" draggable="false"><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8zM7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708l2-2zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10z"/></svg></div>`),
     }
-    item_els.wrapper.setAttribute('class',`media-wrapper ${media_obj.type} ${(media_obj.brand ? media_obj.brand : 'default')}`);
-    item_els.container.setAttribute('class',`media ${media_obj.type} ${(media_obj.brand ? media_obj.brand : 'default')}`);
-    item_els.caption.setAttribute('class','caption');
     if(media_obj.type == 'video'){
       item_els.figure.innerHTML = `<video preload="auto" loop muted controls><source type="${media_obj.mime}" src="${media_obj.url.replace('.gifv','.mp4')}" /></video>`
     } else if(media_obj.ext == 'svg'){
@@ -168,21 +169,13 @@ const createMediaElements = (media_objs, url) => {
     } else if(media_obj.type == 'image'){
       item_els.figure.innerHTML = `<a href="${url}" target="_blank"><img src="${media_obj.dataurl}" /></a>`;
     } else if(media_obj.type == 'embed'){
-      const iframe = document.createElement('iframe');
-      iframe.style.height = `${media_obj.height}px`;
-      iframe.setAttribute('src', media_obj.url);
-      item_els.resize.setAttribute('class','resize flex-center');
-      item_els.resize.setAttribute('draggable','false');
-      item_els.resize.innerHTML = `<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8zM7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708l2-2zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10z"/></svg>`;
-      item_els.resize.addEventListener('click', (event) => { iframe.style.height = `${parseInt(iframe.style.height) + 215}px` } );
-      item_els.figure.appendChild(iframe);
+      item_els.resize.addEventListener('click', (event) => { item_els.iframe.style.height = `${parseInt(item_els.iframe.style.height) + 215}px` } );
+      item_els.figure.appendChild(item_els.iframe);
       item_els.wrapper.appendChild(item_els.resize);
     }
-    item_els.caption.innerHTML = `<span>${media_obj.url}</span>`;
-    item_els.createfilter.innerHTML = `<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.354 4.646L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 1 1 .708-.708z"/></svg>`;
-    item_els.filters.setAttribute('class','media-actions flex-center');
-    item_els.createfilter.setAttribute('class','flex-center');
-    item_els.createfilter.addEventListener('click', (event) => { handleClickCreateMediaFilter(item_els.wrapper,media_obj.url) } );
+    item_els.createfilter.addEventListener('click', (event) => {
+      handleClickCreateMediaFilter(item_els.wrapper,media_obj.url)
+    });
     item_els.filters.appendChild(item_els.createfilter);
     item_els.caption.appendChild(item_els.filters);
     item_els.figure.appendChild(item_els.caption);
@@ -199,17 +192,18 @@ const createFeedsMenu = () => {
   els.menu_feeds.innerHTML = ``;
   store.getFeeds().forEach(feed => {
     const item_els = {
-      container: document.createElement('menuitem'),
-      url: document.createElement('a'),
-      remove: document.createElement('button'),
+      container: _htmlToElement(`<menuitem class="flex"></menuitem>`),
+      grip: _htmlToElement(`<span><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg></span>`),
+      url: _htmlToElement(`<a class="flex-grow-1 ${feed.url === current_feed ? 'active' : ''}" href="#">${feed.url}</a>`),
+      remove: _htmlToElement(`<button>x</button>`),
     }
-    item_els.url.setAttribute('href','#');
-    item_els.container.setAttribute('class','stretch');
-    if(feed.url === current_feed) item_els.url.setAttribute('class','active');
-    item_els.url.innerHTML = feed.url;
-    item_els.url.addEventListener('click',(event) => { handleClickFeed(event,feed.url) })
-    item_els.remove.innerHTML = 'x';
-    item_els.remove.addEventListener('click',() => { handleClickRemoveFeed(feed.url) })
+    item_els.url.addEventListener('click',(event) => {
+      handleClickFeed(event,feed.url)
+    })
+    item_els.remove.addEventListener('click',() => {
+      handleClickRemoveFeed(feed.url)
+    })
+    item_els.container.appendChild(item_els.grip);
     item_els.container.appendChild(item_els.url);
     item_els.container.appendChild(item_els.remove);
     els.menu_feeds.appendChild(item_els.container);
@@ -256,13 +250,13 @@ const createSettingsMenu = async () => {
     container: document.createElement('div'),
     import_opml: {
       container: document.createElement('menuitem'),
-      url: document.createElement('a'),
+      url: _htmlToElement(`<a href="#">Import OPML</a>`),
       message: document.createElement('span'),
       file: _htmlToElement(`<input style="display:none" type="file" />`)
     },
     export_opml: {
       container: document.createElement('menuitem'),
-      url: document.createElement('a'),
+      url: _htmlToElement(`<a href="#" download="mediareader-feeds.opml">Export OPML</a>`),
     },
     clear_feeds: await createConfirmActionItem({
       container_tag: 'menuitem',
@@ -296,9 +290,6 @@ const createSettingsMenu = async () => {
       },
     }),
   }
-
-  item_els.import_opml.url.innerHTML = 'Import OPML';
-  item_els.import_opml.url.href = '#';
   item_els.import_opml.file.addEventListener('change', (event) => {
     item_els.import_opml.message.innerHTML = ``;
     if(event.target.size > 20000){
@@ -329,8 +320,6 @@ const createSettingsMenu = async () => {
   if(has_feeds){
     const feeds_opml = await store.exportFeedsOPML();
     item_els.export_opml.url.href = window.URL.createObjectURL(new Blob([feeds_opml], {type: 'text/plain'}));
-    item_els.export_opml.url.download = 'mediareader-feeds.opml';
-    item_els.export_opml.url.innerHTML = 'Export OPML';
     item_els.export_opml.container.appendChild(item_els.export_opml.url);
     item_els.container.appendChild(item_els.export_opml.container);
   }
@@ -351,14 +340,13 @@ const createMediaFiltersMenu = () => {
   els.menu_mediafilters.innerHTML = ``;
   store.getMediaFilters(current_feed).forEach(filter => {
     const item_els = {
-      container: document.createElement('menuitem'),
-      filter: document.createElement('span'),
-      remove: document.createElement('button'),
+      container: _htmlToElement(`<menuitem class="flex"></menuitem>`),
+      filter: _htmlToElement(`<span class="flex-grow-1">${filter.rule}</span>`),
+      remove: _htmlToElement(`<button>x</button>`),
     }
-    item_els.container.classList.add('stretch');
-    item_els.filter.innerHTML = filter.rule;
-    item_els.remove.innerHTML = 'x';
-    item_els.remove.addEventListener('click',() => { handleClickRemoveMediaFilter(filter.rule) })
+    item_els.remove.addEventListener('click',() => {
+      handleClickRemoveMediaFilter(filter.rule)
+    })
     item_els.container.appendChild(item_els.filter);
     item_els.container.appendChild(item_els.remove);
     els.menu_mediafilters.appendChild(item_els.container);
@@ -373,14 +361,13 @@ const createContentFiltersMenu = () => {
   els.menu_contentfilters.innerHTML = ``;
   store.getContentFilters().forEach(filter => {
     const item_els = {
-      container: document.createElement('menuitem'),
-      filter: document.createElement('span'),
-      remove: document.createElement('button'),
+      container: _htmlToElement(`<menuitem class="flex"></menuitem>`),
+      filter: _htmlToElement(`<span class="flex-grow-1">${filter.rule}</span>`),
+      remove: _htmlToElement(`<button>x</button>`),
     }
-    item_els.container.classList.add('stretch');
-    item_els.filter.innerHTML = filter.rule;
-    item_els.remove.innerHTML = 'x';
-    item_els.remove.addEventListener('click',() => { handleClickRemoveContentFilter(filter.rule) })
+    item_els.remove.addEventListener('click',() => {
+      handleClickRemoveContentFilter(filter.rule)
+    })
     item_els.container.appendChild(item_els.filter);
     item_els.container.appendChild(item_els.remove);
     els.menu_contentfilters.appendChild(item_els.container);
@@ -399,7 +386,11 @@ const handleLoadFeed = async function(url){
   els.loading.classList.add('on');
   current_feed = url;
   await createMediaFiltersMenu();
-  mediareader.getURL(url).then( (response) => { handleFetchFeedSuccess(response,url) }).catch( (error) => { handleFetchFeedError(error,url) });
+  mediareader.getURL(url).then( (response) => {
+    handleFetchFeedSuccess(response,url)
+  }).catch( (error) => {
+    handleFetchFeedError(error,url)
+  });
 }
 const handleClickLoadMore = (root, button, url, feed_media_objs, first_media_obj) => {
   if(button.dataset.state !== 'not-loaded'){
@@ -409,7 +400,11 @@ const handleClickLoadMore = (root, button, url, feed_media_objs, first_media_obj
   };
   button.setAttribute('data-state','loading');
   button.innerHTML = 'Finding and analyzing media urls...';
-  mediareader.getURL(url).then( (response) => { handleFetchSourceSuccess(response, root, button, feed_media_objs, url, first_media_obj) }).catch( (error) => { handleFetchSourceError(error,button) });
+  mediareader.getURL(url).then( (response) => {
+    handleFetchSourceSuccess(response, root, button, feed_media_objs, url, first_media_obj)
+  }).catch( (error) => {
+    handleFetchSourceError(error,button)
+  });
 }
 const handleClickFeed = async (event, feed) => {
   event.preventDefault();

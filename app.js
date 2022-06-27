@@ -1,7 +1,7 @@
 const mediareader = new MediaReader();
 const store = new Store();
 
-let current_feed, els;
+let current_feed, els, halt;
 
 const _timeAgo = (date) => {
   const seconds = Math.floor((new Date() - date) / 1000);
@@ -112,6 +112,10 @@ const handleParseSourceSuccess = async (media_objs, root, button, feed_media_obj
   });
   let unique = first_media_obj ? [first_media_obj] : [];
   for(let i in filtered){
+    if(halt){
+      halt = false;
+      break;
+    }
     button.innerHTML = `Analyzing media object ${parseInt(i) + 1} of ${filtered.length}`;
     const media_downloaded = await mediareader.downloadMedia(filtered[i]);
     const is_unique = await mediareader.isImageUnique(media_downloaded,unique);
@@ -330,7 +334,6 @@ const createSettingsMenu = async () => {
     item_els.export_opml.container.appendChild(item_els.export_opml.url);
     item_els.container.appendChild(item_els.export_opml.container);
   }
-  if(has_feeds || has_mediafilters || has_contentfilters) item_els.container.appendChild(_htmlToElement('<hr/>'))
   if(has_feeds) item_els.container.appendChild(item_els.clear_feeds);
   if(has_mediafilters) item_els.container.appendChild(item_els.clear_mediafilters);
   if(has_contentfilters) item_els.container.appendChild(item_els.clear_contentfilters);
@@ -399,7 +402,11 @@ const handleLoadFeed = async function(url){
   mediareader.getURL(url).then( (response) => { handleFetchFeedSuccess(response,url) }).catch( (error) => { handleFetchFeedError(error,url) });
 }
 const handleClickLoadMore = (root, button, url, feed_media_objs, first_media_obj) => {
-  if(button.dataset.state !== 'not-loaded') return;
+  if(button.dataset.state !== 'not-loaded'){
+    halt = true;
+    button.setAttribute('data-state','no-loaded');
+    return;
+  };
   button.setAttribute('data-state','loading');
   button.innerHTML = 'Finding and analyzing media urls...';
   mediareader.getURL(url).then( (response) => { handleFetchSourceSuccess(response, root, button, feed_media_objs, url, first_media_obj) }).catch( (error) => { handleFetchSourceError(error,button) });

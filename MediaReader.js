@@ -174,7 +174,7 @@ class MediaReader {
       if( headers.size > 10000000 ) throw { message: 'File size too large.', headers: headers, media_obj: media_obj };
       var binary = await this.getURL(media_obj.url,'GET',true);
       var uint8 = await new Uint8Array(binary.length).map((value,i) => binary.charCodeAt(i));
-      if( media_obj.mime == 'image/png' && await this.has_alpha(uint8.buffer) ) throw { message: 'PNG Image with transparency not shown.', media_obj: media_obj };
+      // if( media_obj.mime == 'image/png' && await this.has_alpha(uint8.buffer) ) throw { message: 'PNG Image with transparency not shown.', media_obj: media_obj };
       var dataurl = URL.createObjectURL(new Blob([uint8],{type:media_obj.mime}));
       var animated = await this.is_animated(media_obj.mime,binary,uint8.buffer);
       var image = await this.get_image(dataurl);
@@ -248,8 +248,8 @@ class MediaReader {
    */
   async get_embed_objs(string){
     var embed_sources = [
-      { brand: 'tiktok', height: 900, template: 'https://www.tiktok.com/embed/v2/{id}', regexp: /https:\/\/www\.tiktok\.com\/[\w|@]+\/video\/(\d+)/gs },
-      { brand: 'instagram', height: 850, template: 'https://www.instagram.com/p/{id}/embed/', regexp: /https:\/\/instagram\.com\/p\/([\d|a-zA-Z|\-|_]+)/gs },
+      { brand: 'tiktok', height: 575, template: 'https://www.tiktok.com/embed/v2/{id}', regexp: /https:\/\/www\.tiktok\.com\/[\w|@]+\/video\/(\d+)/gs },
+      { brand: 'instagram', height: 575, template: 'https://www.instagram.com/p/{id}/embed/', regexp: /https:\/\/instagram\.com\/p\/([\d|a-zA-Z|\-|_]+)/gs },
       { brand: 'youtube', height: 280, template: 'https://www.youtube.com/embed/{id}', regexp: /https:\/\/[www.]*youtube\.com\/(?:watch\?v\=|embed\/(?!videoseries))([\d|a-zA-Z|\-|_]+)/gs },
       { brand: 'youtube', height: 280, template: 'https://www.youtube.com/embed/videoseries?list={id}', regexp: /https:\/\/[www.]*youtube\.com\/(?:embed\/videoseries\?list=)([^\"|&]*)/gs },
       { brand: 'twitter', height: 250, template: 'https://platform.twitter.com/embed/index.html?id={id}', regexp: /https:\/\/twitter\.com\/[\w]+\/status\/(\d+)/gs },
@@ -258,7 +258,15 @@ class MediaReader {
       //{ brand: 'reddit-embed', height: 220, template: '{id}?ref_source=embed&amp;ref=share&amp;embed=true', regexp: /(https:\/\/www\.reddit\.com\/r\/(?:[\d|a-zA-Z|\-|_]+)\/comments\/(?:[\d|a-zA-Z|\-|_]+)\/(?:[\d|a-zA-Z|\-|_]+))\//gs },
       { brand: 'imgur', height: 500, template: 'https://imgur.com/{id}/embed', regexp: /https:\/\/imgur\.com\/(\w+)\/embed/gs },
       { brand: 'vimeo', height: 280, template: 'https://player.vimeo.com/video/{id}', regexp: /https:\/\/player\.vimeo\.com\/video\/(\d+)/gs },
+      { brand: 'codepen', height: 450, template: 'https://codepen.io/anon/embed/preview/{id}', regexp: /\/\/codepen\.io\/anon\/embed\/preview\/(\w+)/gs },
+      { brand: 'spotify-playlist', height: 151, template: 'https://open.spotify.com/embed/playlist/{id}', regexp: /https:\/\/open\.spotify\.com\/embed\/playlist\/(\w+)/gs },
+      { brand: 'spotify-track', height: 580, template: 'https://open.spotify.com/embed/track/{id}', regexp: /https:\/\/open\.spotify\.com\/embed\/track\/(\w+)/gs },
+      { brand: 'spotify-album', height: 151, template: 'https://open.spotify.com/embed/album/{id}', regexp: /https:\/\/open\.spotify\.com\/embed\/album\/(\w+)/gs },
+      { brand: 'soundcloud-track', height: 160, template: 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/{id}', regexp: /https:\/\/w\.soundcloud\.com\/player\/\?url=https%3A\/\/api\.soundcloud\.com\/tracks\/(\w+)/gs },
+      { brand: 'soundcloud-album', height: 160, template: 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/{id}', regexp: /https:\/\/w\.soundcloud\.com\/player\/\?url=https%3A\/\/api\.soundcloud\.com\/playlists\/(\w+)/gs },
     ];
+
+
     var embeds = await Promise.all( embed_sources.map(async function(source){ // map sources
       const embed_matches = [...string.matchAll(source.regexp)];
       return await embed_matches.map(function(result){ // map regex matches to my embed structure
@@ -355,9 +363,9 @@ class MediaReader {
     const guid_text = guid ? guid.textContent : null;
     const link_text = link ? link.textContent : null;
     const link_href = link ? link.getAttribute('href') : null;
-    if(link_text) return link_text;
-    if(link_href) return link_href;
-    if(guid_text) return guid_text;
+    if(link_text) return link_text.trim();
+    if(link_href) return link_href.trim();
+    if(guid_text) return guid_text.trim();
     return '';
   }
 

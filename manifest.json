@@ -21,7 +21,6 @@
     "storage",
     "tabs",
     "declarativeContent",
-    "activeTab",
     "scripting",
     "webRequest"
   ],

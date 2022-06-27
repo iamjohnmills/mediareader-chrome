@@ -12,13 +12,31 @@ class Store {
     return;
   }
   async clearFeeds(){
-    chrome.storage.local.remove(['feeds'], (result) => { this.feeds = [] });
+    return new Promise((resolve, reject) => {
+      chrome.storage.local.set({feeds: []}, () => {
+        this.feeds = [];
+        return resolve(true);
+      });
+    });
+    // chrome.storage.local.remove(['feeds'], (result) => { this.feeds = [] });
   }
   async clearMediaFilters(){
-    chrome.storage.local.remove(['filters_media'], (result) => { this.filters_media = [] });
+    return new Promise((resolve, reject) => {
+      chrome.storage.local.set({filters_media: []}, () => {
+        this.filters_media = [];
+        return resolve(true);
+      });
+    });
+    // chrome.storage.local.remove(['filters_media'], (result) => { this.filters_media = [] });
   }
   async clearContentFilters(){
-    chrome.storage.local.remove(['filters_content'], (result) => { this.filters_content = [] });
+    return new Promise((resolve, reject) => {
+      chrome.storage.local.set({filters_content: []}, () => {
+        this.filters_content = [];
+        return resolve(true);
+      });
+    });
+    // chrome.storage.local.remove(['filters_content'], (result) => { this.filters_content = [] });
   }
   initializeFeeds(){
     return new Promise((resolve, reject) => {
@@ -73,7 +91,7 @@ class Store {
     for(const outline of outlines){
       const url = outline.getAttribute('xmlUrl');
       const exists = this.feeds.findIndex(feed => feed.url === url) !== -1;
-      if(exists) return false;
+      if(exists) continue;
       const created_at = new Date();
       const feed = { url: url, created_at: created_at.toISOString() };
       await this.feeds.push(feed);

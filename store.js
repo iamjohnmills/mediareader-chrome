@@ -18,7 +18,6 @@ class Store {
         return resolve(true);
       });
     });
-    // chrome.storage.local.remove(['feeds'], (result) => { this.feeds = [] });
   }
   async clearMediaFilters(){
     return new Promise((resolve, reject) => {
@@ -27,7 +26,6 @@ class Store {
         return resolve(true);
       });
     });
-    // chrome.storage.local.remove(['filters_media'], (result) => { this.filters_media = [] });
   }
   async clearContentFilters(){
     return new Promise((resolve, reject) => {
@@ -36,7 +34,6 @@ class Store {
         return resolve(true);
       });
     });
-    // chrome.storage.local.remove(['filters_content'], (result) => { this.filters_content = [] });
   }
   initializeFeeds(){
     return new Promise((resolve, reject) => {

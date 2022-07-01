@@ -34,7 +34,7 @@ gulp.task('task_bundle', gulp.series(['task_scripts', 'task_cssmin','task_htmlmi
 }))
 
 gulp.task('task_deploy', gulp.series('task_bundle', function(){
-  return gulp.src('./deploy')
+  return gulp.src('./deploy/bundle/*')
 		.pipe(zip('mediareader.zip'))
 		.pipe(gulp.dest('./deploy'))
 }))

@@ -156,8 +156,9 @@ const createMediaElements = (media_objs, url) => {
       wrapper: _htmlToElement(`<div class="media-wrapper"></div>`),
       container: _htmlToElement(`<div class="media"></div>`),
       figure: document.createElement('figure'),
-      caption: _htmlToElement(`<figcaption><span>${media_obj.url}</span></figcaption>`),
-      filters: _htmlToElement(`<div class="media-actions flex-center"></div>`),
+      // caption: _htmlToElement(`<figcaption><span>${media_obj.url}</span></figcaption>`),
+      // filters: _htmlToElement(`<div class="media-actions flex-center"></div>`),
+      tooltip: _htmlToElement(`<div class="tooltip">Create filter to remove this media file: <br/>${media_obj.url}</div>`),
       createfilter: _htmlToElement(`<button class="remove-media flex-center"><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/></svg></button>`),
       iframe: _htmlToElement(`<iframe src="${media_obj.url}" height="${media_obj.height}" style="height:${media_obj.height}px"></iframe>`),
       resize: _htmlToElement(`<div class="resize flex-center" draggable="false"><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8zM7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708l2-2zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10z"/></svg></div>`),
@@ -176,6 +177,7 @@ const createMediaElements = (media_objs, url) => {
     item_els.createfilter.addEventListener('click', (event) => {
       handleClickCreateMediaFilter(item_els.wrapper,media_obj.url)
     });
+    item_els.createfilter.appendChild(item_els.tooltip);
     item_els.wrapper.appendChild(item_els.createfilter);
     // item_els.caption.appendChild(item_els.filters);
     // item_els.figure.appendChild(item_els.caption);

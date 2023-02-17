@@ -298,7 +298,7 @@ class MediaReader {
       { mime: 'image/apng', type: 'animated', ext: 'apng', regexp: /(https?:)?[\/|%|\w|\.|\-]+\.apng/i },
     ];
     var html = new DOMParser().parseFromString(string, 'text/html');
-    var selector = 'source,img,a,media\\:content,media\\:thumbnail,enclosure'; // meta[property*="image"],[style*="background"]
+    var selector = 'source,img,a,media\\:content,itunes\\:image,media\\:thumbnail,enclosure'; // meta[property*="image"],[style*="background"]
     var nodes = html.querySelectorAll(selector);
     return await Array.from( await Promise.all( Array.from(nodes).map(async function(node){
       return await Array.from( await Promise.all( Array.from(node.attributes).map(async function(attribute){

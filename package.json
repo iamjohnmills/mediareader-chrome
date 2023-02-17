@@ -4,7 +4,7 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "gulp build"
   },
   "repository": {
     "type": "git",
@@ -18,15 +18,16 @@
   "homepage": "https://github.com/iamjohnmills/mediareader-chrome#readme",
   "devDependencies": {
     "del": "^6.1.1",
-    "gulp": "^4.0.2",
+    "gulp": "^3.9.1",
     "gulp-change": "^1.0.2",
     "gulp-clean": "^0.4.0",
+    "gulp-cli": "^2.3.0",
     "gulp-concat": "^2.6.1",
     "gulp-csso": "^4.0.1",
     "gulp-htmlmin": "^5.0.1",
     "gulp-javascript-obfuscator": "^1.1.6",
     "gulp-uglify-es": "^3.0.0",
-    "gulp-zip": "^5.1.0",
+    "gulp-zip": "^4.2.0",
     "readable-stream": "^4.0.0"
   }
 }

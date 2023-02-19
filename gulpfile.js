@@ -1,7 +1,7 @@
 var gulp = require('gulp');
 var uglify = require('gulp-uglify-es').default;
 var pipeline = require('readable-stream').pipeline;
-var javascriptObfuscator = require('gulp-javascript-obfuscator');
+// var javascriptObfuscator = require('gulp-javascript-obfuscator');
 var concat = require('gulp-concat');
 var htmlmin = require('gulp-htmlmin');
 var csso = require('gulp-csso');
@@ -12,7 +12,7 @@ gulp.task('task_scripts',function(){
   return gulp.src(['./MediaReader.js', './store.js', './app.js'])
     .pipe(concat('app.js'))
     .pipe(uglify())
-    .pipe(javascriptObfuscator({compact: true}))
+    // .pipe(javascriptObfuscator({compact: true}))
     .pipe(gulp.dest('./out'));
 })
 

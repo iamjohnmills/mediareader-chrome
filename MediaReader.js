@@ -254,7 +254,7 @@ class MediaReader {
       { brand: 'youtube', height: 280, template: 'https://www.youtube.com/embed/videoseries?list={id}', regexp: /https:\/\/[www.]*youtube\.com\/(?:embed\/videoseries\?list=)([^\"|&]*)/gs },
       { brand: 'twitter', height: 250, template: 'https://platform.twitter.com/embed/index.html?id={id}', regexp: /https:\/\/twitter\.com\/[\w]+\/status\/(\d+)/gs },
       { brand: 'reddit-media', height: 280, template: 'https://www.redditmedia.com/mediaembed/{id}?responsive=true', regexp: /https:\/\/www\.redditmedia\.com\/mediaembed\/(\w+)/gs },
-      { brand: 'reddit-video', height: 280, template: 'https://v.redd.it/{id}/DASH_480.mp4', regexp: /https:\/\/v.redd.it\/(\w+)\/DASH_480\.mp4/gs },
+      { brand: 'reddit-video', height: 280, template: 'https://v.redd.it/{id}/DASH_96.mp4', regexp: /https:\/\/v.redd.it\/(\w+)\/DASH_96\.mp4/gs },
       //{ brand: 'reddit-embed', height: 220, template: '{id}?ref_source=embed&amp;ref=share&amp;embed=true', regexp: /(https:\/\/www\.reddit\.com\/r\/(?:[\d|a-zA-Z|\-|_]+)\/comments\/(?:[\d|a-zA-Z|\-|_]+)\/(?:[\d|a-zA-Z|\-|_]+))\//gs },
       { brand: 'imgur', height: 500, template: 'https://imgur.com/{id}/embed', regexp: /https:\/\/imgur\.com\/(\w+)\/embed/gs },
       { brand: 'vimeo', height: 280, template: 'https://player.vimeo.com/video/{id}', regexp: /https:\/\/player\.vimeo\.com\/video\/(\d+)/gs },
